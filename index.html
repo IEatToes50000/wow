@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Gallery - Click to Redirect</title>
+    <style>
+        /* ===== RESET & BASE STYLES ===== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            min-height: 100vh;
+            padding: 20px;
+            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab, #667eea, #764ba2);
+            background-size: 400% 400%;
+            animation: gradientWave 15s ease infinite;
+        }
+
+        @keyframes gradientWave {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        /* ===== LAYOUT CONTAINERS ===== */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        /* ===== GALLERY GRID ===== */
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        /* ===== IMAGE SLOT STYLES WITH HOVER HIGHLIGHTING ===== */
+        .image-slot {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+            border: 3px solid transparent;
+            cursor: pointer;
+        }
+
+        .image-slot:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            border: 3px solid rgba(255, 255, 255, 0.8);
+            background: rgba(255, 255, 255, 1);
+        }
+
+        .image-container {
+            position: relative;
+            width: 100%;
+            height: 250px;
+            border-radius: 15px;
+            overflow: hidden;
+            margin-bottom: 15px;
+            background: linear-gradient(45deg, #f0f0f0, #e0e0e0);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .image-container:hover {
+            transform: scale(1.02);
+            border: 2px solid rgba(102, 126, 234, 0.6);
+            box-shadow: 0 0 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .image-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: all 0.3s ease;
+        }
+
+        .image-container:hover img {
+            transform: scale(1.1);
+            filter: brightness(1.1);
+        }
+
+        .placeholder {
+            color: #999;
+            font-size: 1.1rem;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .image-container:hover .placeholder {
+            color: #667eea;
+            transform: scale(1.05);
+        }
+
+        /* ===== IMAGE INFO SECTION ===== */
+        .image-info {
+            text-align: center;
+            padding: 10px 0;
+        }
+
+        .image-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .image-slot:hover .image-title {
+            color: #667eea;
+            transform: scale(1.05);
+        }
+
+        .slot-number {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(102, 126, 234, 0.9);
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 0.9rem;
+            z-index: 5;
+        }
+
+        /* ===== EDIT BUTTON ===== */
+        .edit-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+            opacity: 0;
+            z-index: 10;
+        }
+
+        .image-slot:hover .edit-btn {
+            opacity: 1;
+        }
+
+        .edit-btn:hover {
+            background: rgba(0, 0, 0, 0.9);
+            transform: scale(1.1);
+        }
+
+        /* ===== OVERLAY ICON ===== */
+        .overlay-icon {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            opacity: 0;
+            transition: all 0.3s ease;
+        }
+
+        .image-container:hover .overlay-icon {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1.1);
+        }
+
+        /* ===== MODAL STYLES ===== */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal h2 {
+            margin-bottom: 20px;
+            color: #333;
+            text-align: center;
+        }
+
+        .modal-slot-info {
+            background: rgba(102, 126, 234, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+            border: 1px solid rgba(102, 126, 234, 0.2);
+        }
+
+        .modal-slot-info h3 {
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .current-link-display {
+            background: rgba(255, 193, 7, 0.1);
+            border: 1px solid rgba(255, 193, 7, 0.3);
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        .current-link-display strong {
+            color: #856404;
+        }
+
+        .current-link-display span {
+            color: #666;
+            word-break: break-all;
+            font-family: monospace;
+            font-size: 0.9rem;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        /* ===== BUTTONS ===== */
+        .btn-group {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #666;
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+
+        /* ===== FOOTER STYLES ===== */
+        .footer {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 20px;
+            text-align: center;
+            margin-top: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .social-links {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 15px;
+        }
+
+        .social-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            color: white;
+            text-decoration: none;
+            border-radius: 25px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .social-link:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .telegram-link {
+            background: linear-gradient(135deg, #0088cc, #229ed9);
+        }
+
+        .telegram-link:hover {
+            background: linear-gradient(135deg, #006ba6, #1a7fb8);
+        }
+
+        .discord-link {
+            background: linear-gradient(135deg, #5865f2, #7289da);
+        }
+
+        .discord-link:hover {
+            background: linear-gradient(135deg, #4752c4, #5b6ecd);
+        }
+
+        .footer-text {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.9rem;
+        }
+
+        /* ===== RESPONSIVE DESIGN ===== */
+        @media (max-width: 768px) {
+            .gallery {
+                grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+                gap: 20px;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .modal-content {
+                margin: 20px;
+                width: calc(100% - 40px);
+            }
+
+            .social-links {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <!-- ===== HEADER SECTION ===== -->
+        <div class="header">
+            <h1>Image Gallery</h1>
+            <p>Click any image to visit its destination • Click edit to customize</p>
+        </div>
+
+        <!-- ===== GALLERY GRID ===== -->
+        <div class="gallery" id="gallery">
+            <!-- 15 numbered image slots will be generated by JavaScript -->
+        </div>
+
+        <!-- ===== FOOTER WITH SOCIAL LINKS ===== -->
+        <div class="footer">
+            <div class="social-links">
+                <a href="https://t.me/yourchannel" class="social-link telegram-link" target="_blank">
+                    📱 Join our Telegram
+                </a>
+                <a href="https://discord.gg/yourserver" class="social-link discord-link" target="_blank">
+                    🎮 Join our Discord
+                </a>
+            </div>
+            <p class="footer-text">Connect with our community for updates and support</p>
+        </div>
+    </div>
+
+    <!-- ===== EDIT MODAL ===== -->
+    <div class="modal" id="editModal">
+        <div class="modal-content">
+            <h2>Edit Image</h2>
+            <div class="modal-slot-info" id="modalSlotInfo">
+                <h3>Editing Slot #1</h3>
+                <p>Customize this image slot</p>
+            </div>
+            <div class="current-link-display" id="currentLinkDisplay">
+                <strong>Current Redirect Link:</strong><br>
+                <span id="currentLinkText">No link set</span>
+            </div>
+            <div class="form-group">
+                <label for="imageUrl">Image URL:</label>
+                <input type="url" id="imageUrl" placeholder="https://example.com/image.jpg">
+            </div>
+            <div class="form-group">
+                <label for="imageTitle">Image Title:</label>
+                <input type="text" id="imageTitle" placeholder="Enter image title">
+            </div>
+            <div class="form-group">
+                <label for="redirectLink">Redirect Link (lockr.so or any URL):</label>
+                <input type="url" id="redirectLink" placeholder="https://lockr.so/your-link">
+            </div>
+            <div class="btn-group">
+                <button class="btn btn-primary" onclick="saveImage()">Save</button>
+                <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ===== CONFIGURATION VARIABLES =====
+        let currentEditingSlot = null;
+        let slotCounter = 0;
+
+        // ========================================
+        // 🎯 EASY CUSTOMIZATION SECTION
+        // ========================================
+        // ADD YOUR OWN IMAGES HERE - Just copy and paste this format:
+
+        const myCustomImages = [
+            // EXAMPLE 1 - Replace with your own
+            {
+                title: 'Bailey Hurley',
+                imageUrl: 'https://media.discordapp.net/attachments/1270975963190267948/1390558983567442053/pb1hdwvricwd1.png?ex=6868b279&is=686760f9&hm=1d92edb34f879e25bec78d8a99cb76a50543187014301ae68ffaa245842b8a78&=&format=webp&quality=lossless&width=486&height=864',
+                redirectLink: 'https://lockr.so/XvNxC6y4L'
+            },
+
+            // EXAMPLE 2 - Replace with your own
+            {
+                title: 'Amy rose',
+                imageUrl: 'https://media.discordapp.net/attachments/1389706113607405738/1389706451777360047/image.png?ex=68683b7d&is=6866e9fd&hm=dd529ca58831c353c84b64b79520673bf26267326a86462617fe36ec24c6ff2e&=&format=webp&quality=lossless&width=510&height=864',
+                redirectLink: 'https://lockr.so/RXv5UNXk1'
+            },
+
+            // EXAMPLE 3 - Add your own here
+            {
+                title: 'Sklyarmaexo',
+                imageUrl: 'https://media.discordapp.net/attachments/1389694914270335027/1389695130390499338/image.png?ex=686830f2&is=6866df72&hm=8c21723b8a5bada2384b348e4e5c29d83d1f61fb6c5852251bb14facab3678ad&=&format=webp&quality=lossless&width=202&height=350',
+                redirectLink: 'https://lockr.so/MX8EX0W64'
+            },
+
+            // EXAMPLE 4 - Add your own here
+            {
+                title: 'Brooke',
+                imageUrl: 'https://media.discordapp.net/attachments/1389682794715807864/1389683134726930663/image.png?ex=686825c6&is=6866d446&hm=c5ed2634c538829a1db147bb4c1bd352e4f0c4d209c3da6e98c9fbee6ade00ad&=&format=webp&quality=lossless',
+                redirectLink: 'https://lockr.so/11e3U2A6n'
+            },
+
+            // EXAMPLE 5 - Add your own here
+            {
+                title: 'Marissa',
+                imageUrl: 'https://media.discordapp.net/attachments/1387270093205147721/1387270280057196574/image.png?ex=68689921&is=686747a1&hm=dc7033cce451af8d3e615d9c64edf52181a32fcfb6a27229113773ee041116a1&=&format=webp&quality=lossless',
+                redirectLink: 'https://lockr.so/WLK5haYLT'
+            },
+
+            {
+                title: 'Maya',
+                imageUrl: 'https://media.discordapp.net/attachments/1387269823939084398/1387270054374015077/image.png?ex=686898eb&is=6867476b&hm=1261c470f37da300d731d3eb2d05d4e045b1ef1066616f07e8c0714faf92da7e&=&format=webp&quality=lossless',
+                redirectLink: 'https://lockr.so/oW0caeTax'
+            },
+
+            {
+                title: 'Maya',
+                imageUrl: 'https://media.discordapp.net/attachments/1387269823939084398/1387270054374015077/image.png?ex=686898eb&is=6867476b&hm=1261c470f37da300d731d3eb2d05d4e045b1ef1066616f07e8c0714faf92da7e&=&format=webp&quality=lossless',
+                redirectLink: 'https://lockr.so/oW0caeTax'
+            },
+
+            {
+                title: 'Maya',
+                imageUrl: 'https://media.discordapp.net/attachments/1387269823939084398/1387270054374015077/image.png?ex=686898eb&is=6867476b&hm=1261c470f37da300d731d3eb2d05d4e045b1ef1066616f07e8c0714faf92da7e&=&format=webp&quality=lossless',
+                redirectLink: 'https://lockr.so/oW0caeTax'
+            },
+
+            {
+                title: 'Maya',
+                imageUrl: 'https://media.discordapp.net/attachments/1387269823939084398/1387270054374015077/image.png?ex=686898eb&is=6867476b&hm=1261c470f37da300d731d3eb2d05d4e045b1ef1066616f07e8c0714faf92da7e&=&format=webp&quality=lossless',
+                redirectLink: 'https://lockr.so/oW0caeTax'
+            },
+
+            {
+                title: 'Maya',
+                imageUrl: 'https://media.discordapp.net/attachments/1387269823939084398/1387270054374015077/image.png?ex=686898eb&is=6867476b&hm=1261c470f37da300d731d3eb2d05d4e045b1ef1066616f07e8c0714faf92da7e&=&format=webp&quality=lossless',
+                redirectLink: 'https://lockr.so/oW0caeTax'
+            }
+
+
+            // 🔥 TO ADD MORE IMAGES:
+            // Just copy the format above and add more objects like this:
+            // {
+            //     title: 'Your Image Title',
+            //     imageUrl: 'https://your-image-url.com/image.jpg',
+            //     redirectLink: 'https://lockr.so/your-redirect'
+            // },
+        ];
+
+        // ========================================
+        // 📱 SOCIAL LINKS CUSTOMIZATION
+        // ========================================
+        // Change these URLs to your own social links:
+        const socialLinks = {
+            telegram: 'https://t.me/yourchannel',    // Replace with your Telegram
+            discord: 'https://discord.gg/yourserver' // Replace with your Discord
+        };
+
+        // ========================================
+        // 🎨 MAIN FUNCTIONS (Don't change these)
+        // ========================================
+
+        /**
+         * Creates a new image slot element with hidden redirect links
+         */
+        function createImageSlot(imageData = null, slotNumber = 1) {
+            const slot = document.createElement('div');
+            slot.className = 'image-slot';
+            slot.dataset.slotId = slotCounter++;
+            slot.dataset.slotNumber = slotNumber;
+
+            const hasImage = imageData && imageData.imageUrl;
+
+            slot.innerHTML = `
+                <div class="slot-number">${slotNumber}</div>
+                <button class="edit-btn" onclick="editImage(this.parentElement, event)">✏️</button>
+                <div class="image-container" onclick="redirectToLink(this.parentElement)">
+                    ${hasImage ?
+                    `<img src="${imageData.imageUrl}" alt="${imageData.title || 'Image'}">
+                         <div class="overlay-icon">🔗</div>` :
+                    '<div class="placeholder">Click edit to add image</div>'
+                }
+                </div>
+                <div class="image-info">
+                    <div class="image-title">${imageData?.title || `Slot ${slotNumber} - Add Title`}</div>
+                </div>
+            `;
+
+            // Store data in the element for easy access (hidden from viewers)
+            if (imageData) {
+                slot.dataset.imageUrl = imageData.imageUrl || '';
+                slot.dataset.imageTitle = imageData.title || '';
+                slot.dataset.redirectLink = imageData.redirectLink || '';
+            }
+
+            return slot;
+        }
+
+        /**
+         * Initializes the gallery with 15 numbered slots
+         */
+        function initializeGallery() {
+            const gallery = document.getElementById('gallery');
+
+            // Add slots with your custom images
+            for (let i = 0; i < 15; i++) {
+                const imageData = myCustomImages[i] || null; // Use your custom data if available
+                const slot = createImageSlot(imageData, i + 1);
+                gallery.appendChild(slot);
+            }
+
+            // Update social links in footer
+            updateSocialLinks();
+        }
+
+        /**
+         * Updates social links in the footer
+         */
+        function updateSocialLinks() {
+            const telegramLink = document.querySelector('.telegram-link');
+            const discordLink = document.querySelector('.discord-link');
+
+            if (telegramLink) telegramLink.href = socialLinks.telegram;
+            if (discordLink) discordLink.href = socialLinks.discord;
+        }
+
+        /**
+         * Opens the edit modal for a specific image slot
+         */
+        function editImage(slot, event) {
+            if (event) {
+                event.stopPropagation();
+            }
+
+            currentEditingSlot = slot;
+            const slotNumber = slot.dataset.slotNumber;
+            const currentLink = slot.dataset.redirectLink || '';
+
+            // Update modal header
+            document.getElementById('modalSlotInfo').innerHTML = `
+                <h3>Editing Slot #${slotNumber}</h3>
+                <p>Customize this image slot</p>
+            `;
+
+            // Show current redirect link
+            document.getElementById('currentLinkText').textContent = currentLink || 'No link set';
+
+            // Populate modal with current data
+            document.getElementById('imageUrl').value = slot.dataset.imageUrl || '';
+            document.getElementById('imageTitle').value = slot.dataset.imageTitle || '';
+            document.getElementById('redirectLink').value = currentLink;
+
+            // Show modal
+            document.getElementById('editModal').style.display = 'flex';
+        }
+
+        /**
+         * Saves the edited image data
+         */
+        function saveImage() {
+            if (!currentEditingSlot) return;
+
+            const imageUrl = document.getElementById('imageUrl').value;
+            const imageTitle = document.getElementById('imageTitle').value;
+            const redirectLink = document.getElementById('redirectLink').value;
+            const slotNumber = currentEditingSlot.dataset.slotNumber;
+
+            // Update slot data
+            currentEditingSlot.dataset.imageUrl = imageUrl;
+            currentEditingSlot.dataset.imageTitle = imageTitle;
+            currentEditingSlot.dataset.redirectLink = redirectLink;
+
+            // Update slot display
+            const imageContainer = currentEditingSlot.querySelector('.image-container');
+            const titleElement = currentEditingSlot.querySelector('.image-title');
+
+            if (imageUrl) {
+                imageContainer.innerHTML = `
+                    <img src="${imageUrl}" alt="${imageTitle}">
+                    <div class="overlay-icon">🔗</div>
+                `;
+            } else {
+                imageContainer.innerHTML = '<div class="placeholder">Click edit to add image</div>';
+            }
+
+            titleElement.textContent = imageTitle || `Slot ${slotNumber} - Add Title`;
+
+            closeModal();
+        }
+
+        /**
+         * Closes the edit modal
+         */
+        function closeModal() {
+            document.getElementById('editModal').style.display = 'none';
+            currentEditingSlot = null;
+        }
+
+        /**
+         * Redirects to the link associated with an image slot
+         */
+        function redirectToLink(slot) {
+            const link = slot.dataset.redirectLink;
+            if (link && link.trim() !== '') {
+                window.open(link, '_blank', 'noopener,noreferrer');
+            }
+        }
+
+        // ===== EVENT LISTENERS =====
+        document.getElementById('editModal').addEventListener('click', function (e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', initializeGallery);
+
+        // ========================================
+        // 📝 QUICK EDITING INSTRUCTIONS
+        // ========================================
+        /*
+
+        🎯 HOW TO EASILY CUSTOMIZE YOUR GALLERY:
+
+        1. FIND THE "myCustomImages" ARRAY ABOVE (around line 280)
+        2. REPLACE THE EXAMPLE DATA WITH YOUR OWN:
+           - title: 'Your Image Title'
+           - imageUrl: 'https://your-image-url.com/image.jpg'
+           - redirectLink: 'https://lockr.so/your-link'
+
+        3. TO ADD MORE IMAGES:
+           Just copy this format and add more:
+           {
+               title: 'New Image Title',
+               imageUrl: 'https://new-image-url.com/image.jpg',
+               redirectLink: 'https://lockr.so/new-link'
+           },
+
+        4. SOCIAL LINKS:
+           Change the URLs in the "socialLinks" object:
+           - telegram: 'https://t.me/yourchannel'
+           - discord: 'https://discord.gg/yourserver'
+
+        5. TOTAL SLOTS: 15 (you can fill as many as you want)
+
+        6. VIEWER EXPERIENCE:
+           - Viewers only see: Image + Title + Slot Number
+           - Redirect links are completely hidden
+           - Clean, professional look
+
+        7. YOUR EDITING EXPERIENCE:
+           - Edit any slot by clicking the edit button
+           - See current redirect link in the modal
+           - Easy to manage and update
+
+        🔥 PERFECT FOR LOCKR.SO LINKS!
+        Just paste your lockr.so URLs in the redirectLink field.
+
+        */
+    </script>
+</body>
+
+</html>
